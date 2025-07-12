@@ -109,12 +109,3 @@ elricus/
 - gTTS
 - GPT-4o-mini
 
-## 📚 Acknowledgments
-
-This project was built as part of my summer school learning and personal experiments with GenAI.  
-Thanks to OpenAI, Hugging Face, and the dev community for resources and model support.
-
-## 📄 License
-
-This project is licensed under the MIT License.  
-See the `LICENSE` file for more details.
