@@ -32,15 +32,12 @@ clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
 
 
 
-TELEGRAM_BOT_TOKEN = "your-telegram-token-here"
-OPENAI_API_KEY = "your-openai-api-key-here"
+TELEGRAM_BOT_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN")
+OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
 
-
-
-
-bot = Bot(token=TELEGRAM_BOT_TOKEN) 
-dp = Dispatcher()                                                                     #initialising the bot and client
-client = OpenAI(api_key=OPENAI_API_KEY)                     
+bot=Bot(token=TELEGRAM_BOT_TOKEN) 
+dp=Dispatcher()                                                                     #initialising the bot and client
+client=OpenAI(api_key=OPENAI_API_KEY)                     
 
 #creating a memory and cache
 memory = {}
@@ -48,8 +45,6 @@ user_images = {}                                             #stores images sent
 
 
 logging.basicConfig(level=logging.INFO)                      #logging
-
-
 
 
 #helper functions down here
@@ -62,7 +57,7 @@ def log_messages_to_json(user_name, user_id, role, message):
         "role": role,
         "message": message
     }
-    with open(r"D:\Elricus Bot\chat_logs.jsonl", "a") as f:
+    with open("chat_logs.jsonl", "a") as f:
         f.write(json.dumps(entry) + "\n")
 
 
@@ -88,6 +83,7 @@ def ai_reply(user_id: int, user_input: str) -> str:
 
         reply = response.choices[0].message.content.strip()
         memory[user_id].append({'role': 'assistant', 'content': reply})
+        memory[user_id]=memory[user_id][-20:]  #keep last 20 only
 
         return reply
 
@@ -156,8 +152,11 @@ async def help(message: Message):
 
 @dp.message(Command("wipe"))
 async def wipe(message: Message):
-    memory.clear()   #/wipe
-    user_images.clear()
+    user_id=message.from_user.id
+    memory.pop(user_id,None)  #only this user
+    path=user_images.pop(user_id,None)
+    if path and os.path.exists(path):
+        os.remove(path)
     await message.answer("Oh my- , memory has been cleaned up")
 
 @dp.message(Command("imagine"))
@@ -170,7 +169,7 @@ async def imagine(message: Message):
 
     await message.answer("Generating your image 👷🏻‍♂️⚒️")
     params = {"num_inference_steps": 30, "guidance_scale": 7.5}
-    paths = generate(pipe, prompt, params)
+    paths=await asyncio.to_thread(generate,pipe,prompt,params)
 
     if not paths:
         await message.answer("Creative breakdown, please try later")
@@ -241,7 +240,7 @@ async def handle_voice_or_text(message: Message):
 
             os.remove(temp_file.name)
 
-            reply = ai_reply(user_id, transcription)
+            reply=await asyncio.to_thread(ai_reply,user_id,transcription)  #keeps bot responsive
             log_messages_to_json(user_name, user_id, "user", transcription)
             log_messages_to_json("Elricus", "BOT", "bot", reply)
 
@@ -249,7 +248,7 @@ async def handle_voice_or_text(message: Message):
 
         except Exception as e:
             logging.error(f"Voice process failed: {e}")
-            await message.answer(f"Something glitched 😵\n\n`{e}`")
+            await message.answer("Something glitched 😵")
         return
 
     if message.text:
@@ -273,11 +272,8 @@ async def handle_voice_or_text(message: Message):
                 del user_images[user_id]
                 return
 
-            await message.answer("You sent me an image, but didn’t say what to do. Try 'prompt this'.")
-            return
-
        
-        reply = ai_reply(user_id, user_text)
+        reply=await asyncio.to_thread(ai_reply,user_id,user_text)
         log_messages_to_json(user_name, user_id, "user", user_text)
         log_messages_to_json("Elricus", "BOT", "bot", reply)                     
 

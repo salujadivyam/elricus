@@ -1,0 +1,11 @@
+aiogram
+openai
+transformers
+torch
+torchaudio
+diffusers
+accelerate
+pillow
+gtts
+requests
+python-dotenv
