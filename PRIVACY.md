@@ -41,4 +41,4 @@ The bot is not intended for users under 13.
 This policy may be updated. The date above shows the latest version.
 
 ## Contact
-Divyam Saluja, [your email]
+Divyam Saluja, divyam.adt@gmail.com
