@@ -1,7 +1,6 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import Message
-import openai
 from openai import OpenAI
 import asyncio
 import logging                                                                    #importing all the stuff needed
@@ -11,7 +10,6 @@ from diffusers import StableDiffusionPipeline
 import torch
 from PIL import Image
 import uuid
-import matplotlib.pyplot as plt
 from gtts import gTTS
 import tempfile
 import requests
@@ -31,7 +29,8 @@ clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")  
 clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
 
 
-
+from dotenv import load_dotenv
+load_dotenv()  #reads .env
 TELEGRAM_BOT_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
 
