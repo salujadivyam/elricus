@@ -52,12 +52,12 @@ logging.basicConfig(level=logging.INFO)                      #logging
 
 
 
-#=============================================================== helper functions =================================================================
+#helper functions down here
 
 def log_messages_to_json(user_name, user_id, role, message):
     entry = {
         "timestamp": datetime.datetime.now().isoformat(),
-        "user_name": user_name,                                          #logs all the conversations into a json file
+        "user_name": user_name,    #logs all the conversations into a json file
         "user_id": user_id,
         "role": role,
         "message": message
@@ -71,7 +71,7 @@ def ai_reply(user_id: int, user_input: str) -> str:
         if user_id not in memory:
             memory[user_id] = []
  
-        memory[user_id].append({'role': 'user', 'content': user_input})               #replies to the user
+        memory[user_id].append({'role': 'user', 'content': user_input})     #replies to the user
 
         system_prompt = {
             "role": "system",
@@ -102,7 +102,7 @@ def generate(pipe, prompt, params):
         img_paths = []
 
         for i, img in enumerate(images):
-            path = f"generated_{uuid.uuid4().hex[:8]}_{i}.png"                   #generates images
+            path = f"generated_{uuid.uuid4().hex[:8]}_{i}.png"  #generates images
             img.save(path)
             img_paths.append(path)
 
@@ -122,7 +122,7 @@ def reverse_prompt(image_path: str) -> str:
         "an astronaut riding a horse",
         "a scenic mountain landscape",                                                                
         "a delicious slice of pizza",
-        "a portrait of a mysterious woman",                                      #tries to math the image to prompts by giving some samples
+        "a portrait of a mysterious woman",  #tries to math the image to prompts by giving some samples
         "a robot cooking in a kitchen",
         "a surreal dreamscape with melting clocks",
         "a beach with palm trees and clear water",
@@ -137,11 +137,11 @@ def reverse_prompt(image_path: str) -> str:
 
     return text_inputs[best]
 
-#========================================================================== bot commands ==========================================================
 
+#bot commands down here 
 @dp.message(Command("start"))
-async def start(message: Message):                              #/start
-    await message.answer("Hey there, howdy doody? 🤠")
+async def start(message: Message):        #/start
+    await message.answer("Hello there")
 
 @dp.message(Command("help"))
 async def help(message: Message):
@@ -149,23 +149,23 @@ async def help(message: Message):
         "1. /start to start the convo\n\n"
         "2. /imagine to generate an image\n\n"
         "3. /speak to generate audio from text\n\n"
-        "4. /wipe to erase the memory\n"                                                    #/help
+        "4. /wipe to erase the memory\n"     #/help
         "5. Just send a voice note and I'll reply with text \n\n"
         "6. Send an image and say 'prompt this' to reverse it into a prompt "
     )
 
 @dp.message(Command("wipe"))
 async def wipe(message: Message):
-    memory.clear()                                                                          #/wipe
+    memory.clear()   #/wipe
     user_images.clear()
-    await message.answer("Memory wiped! Now I'm the same as Ghajini 🧠")
+    await message.answer("Oh my- , memory has been cleaned up")
 
 @dp.message(Command("imagine"))
 async def imagine(message: Message):
     prompt = message.text.replace("/imagine", "").strip()
 
     if not prompt:
-        await message.answer("......prompt where?, do better kiddo 😮‍💨")                          #/imagine
+        await message.answer("No prompt entered...")   #/imagine
         return
 
     await message.answer("Generating your image 👷🏻‍♂️⚒️")
@@ -173,7 +173,7 @@ async def imagine(message: Message):
     paths = generate(pipe, prompt, params)
 
     if not paths:
-        await message.answer("I had a creative breakdown 😩, please try later")
+        await message.answer("Creative breakdown, please try later")
         return
 
     for path in paths:
@@ -186,12 +186,12 @@ async def speak(message: Message):
 
     try:
         if not text:
-            await message.answer("Can't speak empty thoughts, bro 😵")
+            await message.answer("Can't speak empty thoughts!!!")
             return
 
-        await message.answer("Beep Boop... Elricus warming up his vocal cords 🎤")
+        await message.answer("Beep Boop... Elricus warming up his vocal cords, ahem ahem....")
         tts = gTTS(text=text, lang='en')
-        audiopath = f"tts_{message.message_id}.mp3"                                                #/speak
+        audiopath = f"tts_{message.message_id}.mp3"         #/speak
         tts.save(audiopath)
 
         await message.answer_voice(types.FSInputFile(audiopath))
@@ -201,8 +201,7 @@ async def speak(message: Message):
         logging.error(f"Audio generation failed: {e}")
         await message.answer("I got a sore throat, please try later 😷")
 
-#====================================================================== handelrs ====================================================================
-
+#handlers
 @dp.message(lambda m: m.photo)
 async def handle_image(message: Message):
     user_id = message.from_user.id
@@ -217,7 +216,7 @@ async def handle_image(message: Message):
         f.write(response.content)
 
     user_images[user_id] = path
-    await message.answer("Got the image! 📸 Now say 'prompt this' to reverse it into a prompt 🧠")
+    await message.answer("Got the image! Now say 'prompt this' to reverse it into a prompt")
 
 @dp.message()
 async def handle_voice_or_text(message: Message):
@@ -262,19 +261,19 @@ async def handle_voice_or_text(message: Message):
             image_path = user_images[user_id]
 
             if "prompt" in user_text:
-                await message.answer("Let me reverse-engineer this masterpiece... 🧠🧑‍🎨")
+                await message.answer("Let me reverse-engineer this masterpiece...")
                 try:
                     guessed_prompt = reverse_prompt(image_path)
-                    await message.answer(f"🤖 I think this looks like: *'{guessed_prompt}'*")
+                    await message.answer(f"I think this looks like: *'{guessed_prompt}'*")
                 except Exception as e:
                     logging.error(f"Prompt reversion failed: {e}")
-                    await message.answer("Ugh, can't figure this one out 😵‍💫")
+                    await message.answer("Ugh, can't figure this one out...")
 
                 os.remove(image_path)
                 del user_images[user_id]
                 return
 
-            await message.answer("You sent me an image, but didn’t say what to do 🤨. Try 'prompt this'.")
+            await message.answer("You sent me an image, but didn’t say what to do. Try 'prompt this'.")
             return
 
        
@@ -282,11 +281,9 @@ async def handle_voice_or_text(message: Message):
         log_messages_to_json(user_name, user_id, "user", user_text)
         log_messages_to_json("Elricus", "BOT", "bot", reply)                     
 
-        print(f"🤖 Elricus: {reply}\n")
+        print(f"Elricus: {reply}\n")
         await message.answer(reply)
-
-# ================================================================ bot runner ==========================================================
-
+#bot runner
 async def main():
     await dp.start_polling(bot)
 
